@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Magick.NET-Q16-OpenMP-x64" Version="13.5.0" />
+    <PackageReference Include="Vanara.PInvoke.Shell32" Version="3.4.17" />
   </ItemGroup>
 
 </Project>

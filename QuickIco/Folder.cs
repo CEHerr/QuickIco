@@ -3,7 +3,7 @@
         return new Folder(path);
     }
 }
-public partial class Folder {
+public partial class Folder { 
     public Path path { get; }
     public Desktop desktop;
     public List<Folder> subFolders = new List<Folder>();
@@ -70,7 +70,9 @@ public partial class Folder {
                 folder.SetIcons(true);
             }
         }
-        if (path != Config.LibraryPath) { desktop.UpdateIcon(); }
+        if (path != Config.LibraryPath) { 
+            desktop.SetIcon(new Path(GetIconPath())); 
+        }
     }
 
     //### refactor

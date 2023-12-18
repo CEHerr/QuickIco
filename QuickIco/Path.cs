@@ -13,6 +13,7 @@ public class Path {
 
 #region constructors
     public Path(string path) {
+        //###this throws if the file specified by path does not exist
         info = new FileInfo(path);
     }
     //create a Path by appending the provided string to another path
