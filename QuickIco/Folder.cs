@@ -1,4 +1,5 @@
-﻿public static class FolderFactory {
+﻿using static SysExtension.Collections;
+public static class FolderFactory {
     public static Folder CreateFolder(Path path) {
         return new Folder(path);
     }
@@ -22,16 +23,23 @@ public partial class Folder {
         this.path = new Path(path);
         desktop = new Desktop(this);
     }
-    #endregion
+#endregion
     public void CreateSubFolders(bool recursive) {
+        Each(Directory.GetDirectories(this),
+            (sF) => subFolders.Add(new Folder(sF, this)));
+        if (recursive) 
+            Each(subFolders, (sF) => sF.CreateSubFolders(true));
+        /*
         foreach (string subFolder in Directory.GetDirectories(this)) {
             subFolders.Add(new Folder(subFolder, this));
         }
         if (recursive) {
             foreach (Folder subFolder  in subFolders) {
                 subFolder.CreateSubFolders(true);
+                //Each(subFolders, (sF) => Console.WriteLine(sF));
             }
         }
+        */
     }
     public void PrintSubFolders(bool recursive) {
         if (subFolders.Any()) {
@@ -47,31 +55,36 @@ public partial class Folder {
         IconCreator.ProcessQueue();
     }
     public void QueueAll(bool recursive) {
-        if (recursive && subFolders.Any()) {
-            foreach (Folder subFolder in subFolders) {
-                subFolder.QueueAll(true);
-            }
-        }
+        if (recursive && subFolders.Any()) 
+            Each(subFolders, (sF) => sF.QueueAll(true));
         //change Queue to use an out parameter which is writes the ultimate destination to
         Queue(GetIconSourceImage());
         //### refactor
         void Queue(Path? icoSource) {
             if (icoSource is not null && path != Config.LibraryPath) {
                 if (IconCreator.QueueWork(icoSource, out pathToIcon)) {
+#if verbose
                     Console.WriteLine($"Icon queued for {icoSource}");
+#endif
                 }
             }
         }
     }
 
     public void SetIcons(bool recursive) {
+        //EachIf(recursive && subFolders.Any(),
+        //    subFolders, (sF) => sF.SetIcons(true));
         if (recursive && subFolders.Any()) {
             foreach (var folder in subFolders) {
                 folder.SetIcons(true);
             }
         }
-        if (path != Config.LibraryPath) { 
-            desktop.SetIcon(new Path(GetIconPath())); 
+        if (path != Config.LibraryPath) {
+            if (desktop.SetIcon(GetIconPath())) {
+#if verbose
+                Console.WriteLine($"Icon set for {path}");
+#endif
+            }; 
         }
     }
 
@@ -112,7 +125,7 @@ public partial class Folder {
     /// <returns>If this folder contains media: A Path object for it's Icon Source Image. else: null</returns>
     public Path? GetIconSourceImage() {
         var mediaFiles = GetMediaFiles();
-        if (mediaFiles is null) { return null; }
+        if (mediaFiles is null) return null;
         var namesOnly = from f in mediaFiles
                         select f.ExtlessName;
         var _namesOnly = mediaFiles.Select((x) => x.ExtlessName);

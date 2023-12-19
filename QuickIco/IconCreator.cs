@@ -50,6 +50,9 @@ public static class IconCreator {
                 img.Resize(new MagickGeometry(Config.squareIcoSize));
 
                 img.Write(dest);
+#if verbose
+                Console.WriteLine($"Icon created for {imagePath}");
+#endif
             }
         }
         public static Path ToSaveDest(Path sourceMediaPath) {
