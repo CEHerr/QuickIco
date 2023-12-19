@@ -24,7 +24,7 @@ class QuickIco {
         Folder lib = CreateFolder(Config.LibraryPath);
         lib.CreateSubFolders(true);
         #endregion
-        lib.PrintSubFolders(true);
+        lib.PrintSubFolders();
         //lib.CreateIcon(true);
         //lib.SetIcons(true);
 
