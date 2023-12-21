@@ -76,10 +76,10 @@ public class Path {
     }
 
     //returns the path with the library's path removed
-    private string GetRelativePath() {
+    public string GetRelativePath() {
         return GetInfo().FullName.Substring(Config.LibraryPath.path.Length + 1);
     }
-    private string GetRelativePath(string _path) {
+    public static string GetRelativePath(string _path) {
         DirectoryInfo inf = new(_path);
         return inf.FullName.Substring(Config.LibraryPath.path.Length + 1);
     }

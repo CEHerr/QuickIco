@@ -11,6 +11,8 @@ public static class Config {
     public static Path IcoFolder { get; private set; }
     public static bool Overwrite { get; private set; }
     public static bool Crop { get; private set; }
+    public static string SeparatorSubstitute { get; private set; }
+    public static string NonAsciiSubstitute { get; private set; }
 
     private static int[] date = [
         DateTime.Now.Year,
@@ -42,10 +44,15 @@ public static class Config {
             IcoFolder = new Path(@"C:\BACKUP\Software\!mine\icoSys\icons");
             Overwrite = false;
             Crop = true;
+            SeparatorSubstitute = "$";
+            NonAsciiSubstitute = "_";
         }
         else {
             throw new Exception("Release mode not yet implimented. Please run in Debug Mode");
         }
+    }
+    public static void Init(string[] args) {
+
     }
 
 }

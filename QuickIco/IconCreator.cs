@@ -1,6 +1,9 @@
-﻿using ImageMagick;
-
+﻿using static PrimitiveExtensions.StringExt;
+using ImageMagick;
+//Factor out the entire framework of this into a generic WorkQueue<T> Class?
 public static class IconCreator {
+    //this is used to garuntee a unique path to all icons
+    private static int Id = 0;
     /// <summary>
     /// Adds an image to the work queue of the approprate Icon Creator. Process these queues by calling ProcessQueue()
     /// </summary>
@@ -32,31 +35,82 @@ public static class IconCreator {
 
     private static class ImageIconCreator {
         static Stack<Path> workQueue = new Stack<Path>();
+        //static System.Collections.Concurrent.ConcurrentStack<Path> _workQueue = new();
         public static void QueueWork(Path path) {
             workQueue.Push(path);
+            //Parallel.ForEachAsync(_workQueue, foo); //###
+            //var foo = Foo;                          //###
+            //void Foo(Path inputs) { }
         }
         public static void ProcessQueue() {
+            Console.WriteLine("BEGGINING OF WORK");
             foreach (Path imagePath in workQueue) {
-                Path dest = imagePath.GetSaveDest();
-                if (!Config.Overwrite && dest.Exists()) { continue; }
+                Console.WriteLine($"\t{imagePath}");
+                //Path dest = imagePath.GetSaveDest();
+                Path dest = ToSaveDest(imagePath);
+
+                if (!Config.Overwrite && dest.Exists())
+                    continue;
 
                 MagickImage img = new();
-                img.Read(imagePath);
+                try { 
+                    img.Read(imagePath); }
+                catch { 
+                    Console.WriteLine($"ImageMagick failed to read the image at {imagePath}");
+                    continue;
+                }
 
                 if (Config.Crop) {
                     int sqSize = Math.Min(img.Width, img.Height);
-                    img.Crop(sqSize, sqSize);
+                    try { 
+                        img.Crop(sqSize, sqSize); }
+                    catch { 
+                        Console.WriteLine($"ImageMagick failed to crop the image at {imagePath}");
+                        continue;
+                    }
                 }
-                img.Resize(new MagickGeometry(Config.squareIcoSize));
+                try { 
+                    img.Resize(new MagickGeometry(Config.squareIcoSize)); }
+                catch {
+                    Console.WriteLine($"ImageMagick failed to resize the image at {imagePath}");
+                    continue;
+                }
 
-                img.Write(dest);
+                try { 
+                    img.Write(dest); }
+                catch {
+                    Console.WriteLine($"ImageMagick failed to save the processed image from {imagePath}\nto the save destination {dest}");
+                    continue;
+                }
 #if verbose
                 Console.WriteLine($"Icon created for {imagePath}");
 #endif
             }
         }
+        /// <summary>
+        /// Creates the file path which will be saved too when the image at the specified path is processed.
+        /// </summary>
+        /// <param name="sourceMediaPath">path to the image which will be processed</param>
+        /// <returns>save destination path</returns>
         public static Path ToSaveDest(Path sourceMediaPath) {
-            return sourceMediaPath.GetSaveDest();
+            if (!File.Exists(sourceMediaPath))
+                throw new FileNotFoundException($"No file exists at {sourceMediaPath}");
+
+            string parent = Directory.GetParent(sourceMediaPath).FullName;
+
+            string iconRelativePath = Path.GetRelativePath(parent)
+                .Replace("\\", Config.SeparatorSubstitute)
+                .ReplaceNonAscii(Config.NonAsciiSubstitute);
+
+            bool pathTooLong = (iconRelativePath.Length + Config.IcoFolder.path.Length + 1)
+                             > (Config.maxFilePathLength - 4);
+            if (pathTooLong)
+                iconRelativePath = iconRelativePath
+                    .Remove(Config.maxFilePathLength - (Config.IcoFolder.path.Length + 1) - 4);
+
+            return new Path(Config.IcoFolder, iconRelativePath + ".ico");
+
+            //Note on unique key: two files will not have the same creation time
         }
     }
 

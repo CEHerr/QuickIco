@@ -22,6 +22,7 @@ public partial class Folder {
     public Folder(string path, Folder parent) {
         this.path = new Path(path);
         desktop = new Desktop(this);
+        Console.WriteLine($"folder created for {path}");
     }
 #endregion
     public void CreateSubFolders(bool recursive) {
@@ -31,7 +32,10 @@ public partial class Folder {
             Each(subFolders, (sF) => sF.CreateSubFolders(true));
     }
     public void PrintSubFolders() {
-        SysExtension.Tree.PrintTree(this, (f) => f.subFolders, (f) => f.Name());
+        SysExtension.Tree.PrintTree(
+            this, 
+            (f) => f.subFolders, 
+            (f) => f.Name());
     }
 
     public void CreateIcon(bool recursive) {

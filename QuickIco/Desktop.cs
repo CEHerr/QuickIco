@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using static System.IO.File;
+using Vanara.PInvoke;
 public partial class Folder {
     /// <summary>
     /// Provied methods to access and modify Desktop.ini files which are used by Windows to store custom display options for their parent directory.
@@ -22,15 +23,12 @@ public partial class Folder {
             path = new Path(folder, "desktop.ini");
             parent = folder;
         }
-        //output to Console
+        /// <summary>
+        /// Output entire desktop.ini file to the console
+        /// </summary>
         public void Print() {
             try {
-                using (StreamReader sr = new (path)) {
-                    string? line;
-                    while ((line = sr.ReadLine()) is not null) {
-                        Console.WriteLine(line);
-                    }
-                }
+                Console.WriteLine(File.ReadAllText(path));
             }
             catch {
                 Console.WriteLine($"failed to read the desktop file at {path}");
@@ -39,48 +37,55 @@ public partial class Folder {
 
         /// <summary>
         /// Set the icon of the parent directory to the Icon at the supplied path.
-        /// During normal operation simply call with this.SetIcon(this.pathToIcon);
         /// </summary>
         /// <param name="icoPath">Path to the icon to be used</param>
         /// <returns>True if the operation succeeded, Else false</returns>
         public bool SetIcon(string icoPath) {
-            if (icoPath is null) { return false; }
+            if (icoPath is null) 
+                return false;
 
-            Debug.Assert(File.Exists(icoPath));
+            //this assert will fail if an invalid image makes it into the work queue
+            //Debug.Assert(File.Exists(icoPath));
 
             var foldSet = CreateFolderSettings();
             WriteToDesktop(foldSet);
             ClearIconCache();
             return true;
 
-
-            Vanara.PInvoke.Shell32.SHFOLDERCUSTOMSETTINGS CreateFolderSettings() {
-                return new Vanara.PInvoke.Shell32.SHFOLDERCUSTOMSETTINGS {
-                    dwMask = Vanara.PInvoke.Shell32.FOLDERCUSTOMSETTINGSMASK.FCSM_ICONFILE,
+            /// <summary>
+            /// Creates a folder settings object which is used to determine what to write in the desktop.ini file
+            /// </summary>
+            Shell32.SHFOLDERCUSTOMSETTINGS CreateFolderSettings() {
+                return new Shell32.SHFOLDERCUSTOMSETTINGS {
+                    dwMask = Shell32.FOLDERCUSTOMSETTINGSMASK.FCSM_ICONFILE,
                     pszIconFile = icoPath,
-                    dwSize = (uint)Marshal.SizeOf(typeof(Vanara.PInvoke.Shell32.SHFOLDERCUSTOMSETTINGS)),
+                    dwSize = (uint)Marshal.SizeOf(typeof(Shell32.SHFOLDERCUSTOMSETTINGS)),
                 };
             }
-
-            void WriteToDesktop(Vanara.PInvoke.Shell32.SHFOLDERCUSTOMSETTINGS settings) {
-                Vanara.PInvoke.HRESULT res = Vanara.PInvoke.Shell32.SHGetSetFolderCustomSettings
+            /// <summary>
+            /// Applies the folder settings object to this desktop.ini file and notifies the system of the change
+            /// </summary>
+            void WriteToDesktop(Shell32.SHFOLDERCUSTOMSETTINGS settings) {
+                HRESULT res = Shell32.SHGetSetFolderCustomSettings
                     (ref settings
                     ,parent.path
-                    ,Vanara.PInvoke.Shell32.FCS.FCS_FORCEWRITE);
-                Vanara.PInvoke.Shell32.SHChangeNotify
-                    (Vanara.PInvoke.Shell32.SHCNE.SHCNE_UPDATEDIR
-                    ,Vanara.PInvoke.Shell32.SHCNF.SHCNF_PATHW
+                    ,Shell32.FCS.FCS_FORCEWRITE);
+                Shell32.SHChangeNotify
+                    (Shell32.SHCNE.SHCNE_UPDATEDIR
+                    ,Shell32.SHCNF.SHCNF_PATHW
                     ,parent.path
                     ,null);
                 Console.WriteLine(res.ToString());
             }
-
+            /// <summary>
+            /// Clears the Icon Cache used by Windows Explorer in order to prevent old icons from continuing to be displayed
+            /// </summary>
             void ClearIconCache() {
                 string systemFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.System);
-                Vanara.PInvoke.Kernel32.Wow64DisableWow64FsRedirection(out _);
+                Kernel32.Wow64DisableWow64FsRedirection(out _);
                 Process clearIconCache = new Process {
                     StartInfo = {
-                        FileName = System.IO.Path.Combine(systemFolderPath, "ie4uinit.exe"),
+                        FileName = System.IO.Path.Combine(systemFolderPath, "ie4uinit.exe"),    //ie4uinit.exe is a program that provides management functions related to the Icon Cache
                         Arguments = "-ClearIconCache",
                         WindowStyle = ProcessWindowStyle.Normal
                     }
@@ -96,46 +101,12 @@ public partial class Folder {
         public bool CheckForMatch() {
             return true;
         }
-
         private bool Exists(){
             return File.Exists(this);
         }
-
         public override string ToString() {
             return $"{path}";
         }
         public static implicit operator string(Desktop d) => d.path.path;
-
-
-        //depricated
-
-        //sets this desktop.ini's iconResource to point to the default icon location for this folder
-        public void UpdateIcon() {
-            if (this.Exists()) {
-                SetAttributes(
-                    this,
-                    GetAttributes(this) & ~(hidden | system));
-            }
-
-            WriteAllText(this, BuildDesktop());
-
-            SetAttributes(
-                this,
-                GetAttributes(this) | hidden | system);
-            SetAttributes(
-                parent.path,
-                GetAttributes(parent.path) | system);
-        }
-        //returns the contents of a new desktop.ini file for writing
-        private string BuildDesktop() {
-            string ip = parent.GetIconPath();
-            StringBuilder sb = new();
-            sb.AppendLine("[.ShellClassInfo]");
-            sb.AppendLine("IconResource=" + ip + ",0");
-            sb.AppendLine("IconFile=" + ip);
-            sb.AppendLine("IconIndex=0");
-            return sb.ToString();
-        }
-
     }
 }

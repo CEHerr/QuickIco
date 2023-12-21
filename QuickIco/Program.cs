@@ -4,7 +4,7 @@ using static FolderOptionsFactory;
 using static FolderFactory;
 
 class QuickIco {
-    static void Main(String[] args) {
+    static void Main(string[] args) {
 
 #if (timing)
         System.Diagnostics.Stopwatch timer = new();
@@ -24,9 +24,9 @@ class QuickIco {
         Folder lib = CreateFolder(Config.LibraryPath);
         lib.CreateSubFolders(true);
         #endregion
-        lib.PrintSubFolders();
-        //lib.CreateIcon(true);
-        //lib.SetIcons(true);
+
+        lib.CreateIcon(true);
+        lib.SetIcons(true);
 
         //system call method of setting icons is working
         //Folder testFold = new(@"C:\BACKUP\Ero\doujin\Accio");
