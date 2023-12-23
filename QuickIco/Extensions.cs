@@ -12,5 +12,8 @@ namespace CollectionExtensions {
         public static void Each<T>(this IEnumerable<T> collection, Action<T> action) {
             foreach (var item in collection) action(item);
         }
+        public static string AsString(this IEnumerable<char> e) {
+            return string.Concat(e);
+        }
     }
 }

@@ -3,7 +3,7 @@ using static System.IO.Path;
 //split this class into two classes with a factory
 //one for folders
 //one for files
-public class Path {
+public class __DEPRICATED_PATH__ {
     public string path {  get; private set; }
     public string? Extension   {
         get { 
@@ -27,39 +27,37 @@ public class Path {
         }
     }
 
-#region constructors
-    public Path(string path) {
+    public __DEPRICATED_PATH__(string path) {
         this.path = path;
     }
-    //create a Path by appending the provided string to another path
-    //note that instances of Path and Folder may be implicitly casted to strings
-    public Path(string path, string name) {
+    //create a __DEPRICATED_PATH__ by appending the provided string to another path
+    //note that instances of __DEPRICATED_PATH__ and Folder may be implicitly casted to strings
+    public __DEPRICATED_PATH__(string path, string name) {
         this.path = Combine(path, name);
     }
-#endregion
 
     //### this is only an error check before calling ParentToIco(), possibly move error check to IconCreator and call directly
     //returns icon path to be used for this files parent folder
-    public Path GetSaveDest() {
+    public __DEPRICATED_PATH__ GetSaveDest() {
         if (!IsFile()) { throw new Exception("GetSaveDest() called on a directory"); }
         
         return ParentToIco();
     }
     
     //returns icon path to be used for this folder
-    public Path ToIco() {
+    public __DEPRICATED_PATH__ ToIco() {
         string relativePath = GetRelativePath();
         return IcoFromRel(relativePath);
     }
     //returns icon path to be used for this folder/file's parent
-    private Path ParentToIco() {
+    private __DEPRICATED_PATH__ ParentToIco() {
         DirectoryInfo? parentInfo = Directory.GetParent(path);
         if (parentInfo is null) { throw new Exception($"the path {path} has no parent"); }
         string relParentPath = GetRelativePath(parentInfo.FullName);
         return IcoFromRel(relParentPath);
     }
     //returns the path to a folders icon ; use GetRelativePath to create this methods arg
-    private Path IcoFromRel(string relativePath) {
+    private __DEPRICATED_PATH__ IcoFromRel(string relativePath) {
         string icoName = relativePath.Replace("\\", "$");
 
         //new naming logic goes here
@@ -72,7 +70,7 @@ public class Path {
             icoName = icoName.Remove(Config.maxFilePathLength - icoFolderPathLength - 4);
         }
 
-        return new Path(Config.IcoFolder, icoName + ".ico");
+        return new __DEPRICATED_PATH__(Config.IcoFolder, icoName + ".ico");
     }
 
     //returns the path with the library's path removed
@@ -95,7 +93,8 @@ public class Path {
         return File.Exists(this);
     }
 
-    public static implicit operator string(Path p) => p.path;
+    public static implicit operator string(__DEPRICATED_PATH__ p) => p.path;
+    public static implicit operator __DEPRICATED_PATH__(string s) => new __DEPRICATED_PATH__(s);
 
     public override string ToString() { return path; }
 }

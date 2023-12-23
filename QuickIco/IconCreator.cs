@@ -1,5 +1,7 @@
 ﻿using static PrimitiveExtensions.StringExt;
 using ImageMagick;
+using System.Diagnostics.Contracts;
+using System.Diagnostics.CodeAnalysis;
 //Factor out the entire framework of this into a generic WorkQueue<T> Class?
 public static class IconCreator {
     //this is used to garuntee a unique path to all icons
@@ -10,7 +12,7 @@ public static class IconCreator {
     /// <param name="path">The path to the media file to be used to generate the icon</param>
     /// <param name="saveDestination">The path which will be saved to by the icon creator when the media is processed or null if the file failed to be queued</param>
     /// <returns>True if the media has been successfuly added to a work queue, else false.</returns>
-    public static bool QueueWork(Path path, out Path saveDestination) {
+    public static bool QueueWork(__DEPRICATED_PATH__ path, out __DEPRICATED_PATH__ saveDestination) {
         switch (path.Extension) {
             case ".jpg":
                 saveDestination = ImageIconCreator.ToSaveDest(path);
@@ -33,21 +35,21 @@ public static class IconCreator {
         ImageIconCreator.ProcessQueue();
     }
 
-    private static class ImageIconCreator {
-        static Stack<Path> workQueue = new Stack<Path>();
-        //static System.Collections.Concurrent.ConcurrentStack<Path> _workQueue = new();
-        public static void QueueWork(Path path) {
+    public static class ImageIconCreator {
+        static Stack<__DEPRICATED_PATH__> workQueue = new Stack<__DEPRICATED_PATH__>();
+        //static System.Collections.Concurrent.ConcurrentStack<__DEPRICATED_PATH__> _workQueue = new();
+        public static void QueueWork(__DEPRICATED_PATH__ path) {
             workQueue.Push(path);
             //Parallel.ForEachAsync(_workQueue, foo); //###
             //var foo = Foo;                          //###
-            //void Foo(Path inputs) { }
+            //void Foo(__DEPRICATED_PATH__ inputs) { }
         }
         public static void ProcessQueue() {
             Console.WriteLine("BEGGINING OF WORK");
-            foreach (Path imagePath in workQueue) {
+            foreach (__DEPRICATED_PATH__ imagePath in workQueue) {
                 Console.WriteLine($"\t{imagePath}");
-                //Path dest = imagePath.GetSaveDest();
-                Path dest = ToSaveDest(imagePath);
+                //__DEPRICATED_PATH__ dest = imagePath.GetSaveDest();
+                __DEPRICATED_PATH__ dest = ToSaveDest(imagePath);
 
                 if (!Config.Overwrite && dest.Exists())
                     continue;
@@ -92,13 +94,14 @@ public static class IconCreator {
         /// </summary>
         /// <param name="sourceMediaPath">path to the image which will be processed</param>
         /// <returns>save destination path</returns>
-        public static Path ToSaveDest(Path sourceMediaPath) {
+        public static __DEPRICATED_PATH__ ToSaveDest(__DEPRICATED_PATH__ sourceMediaPath) {
+            Contract.Requires(File.Exists(sourceMediaPath));
             if (!File.Exists(sourceMediaPath))
                 throw new FileNotFoundException($"No file exists at {sourceMediaPath}");
 
             string parent = Directory.GetParent(sourceMediaPath).FullName;
 
-            string iconRelativePath = Path.GetRelativePath(parent)
+            string iconRelativePath = __DEPRICATED_PATH__.GetRelativePath(parent)
                 .Replace("\\", Config.SeparatorSubstitute)
                 .ReplaceNonAscii(Config.NonAsciiSubstitute);
 
@@ -108,7 +111,7 @@ public static class IconCreator {
                 iconRelativePath = iconRelativePath
                     .Remove(Config.maxFilePathLength - (Config.IcoFolder.path.Length + 1) - 4);
 
-            return new Path(Config.IcoFolder, iconRelativePath + ".ico");
+            return new __DEPRICATED_PATH__(Config.IcoFolder, iconRelativePath + ".ico");
 
             //Note on unique key: two files will not have the same creation time
         }

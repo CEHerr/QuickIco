@@ -24,13 +24,15 @@ class QuickIco {
         Folder lib = CreateFolder(Config.LibraryPath);
         lib.CreateSubFolders(true);
         #endregion
-
-        lib.CreateIcon(true);
-        lib.SetIcons(true);
-
+        string const myPath = @"C:\BACKUP\Ero\doujin";
+        var koo = System.IO.Path.GetDirectoryNameOffset();
+        var test = System.IO.Path.GetRelativePath(
+            @"C:\BACKUP\Ero\doujin",
+            @"C:\BACKUP\Ero\doujin\Accio\[Accio] Minato Matome [English]");
+        Console.WriteLine(test);
         //system call method of setting icons is working
         //Folder testFold = new(@"C:\BACKUP\Ero\doujin\Accio");
-        //Path testPath = new(@"C:\BACKUP\Software\!mine\icoSys\icons\Aimaitei Umami$[Aimaitei (Aimaitei Umami)] Futanari Alter-tachi ni Josou Shita Ore ga Okasareru Hanashi (Fate Grand Order) [English] {Hennojin} [Digital].ico");
+        //__DEPRICATED_PATH__ testPath = new(@"C:\BACKUP\Software\!mine\icoSys\icons\Aimaitei Umami$[Aimaitei (Aimaitei Umami)] Futanari Alter-tachi ni Josou Shita Ore ga Okasareru Hanashi (Fate Grand Order) [English] {Hennojin} [Digital].ico");
         //testFold.desktop.SetIcon(testPath);
 #if (create)
         lib.CreateSubFolders(true);

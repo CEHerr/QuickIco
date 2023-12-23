@@ -11,16 +11,16 @@ public partial class Folder {
         private const FileAttributes hidden = FileAttributes.Hidden;
         private const FileAttributes system = FileAttributes.System;
 
-        public Path path { get; }
+        public __DEPRICATED_PATH__ path { get; }
         private Folder parent;
-        private Path? pathToIcon = null;
-        public Path? PathToIcon {
+        private __DEPRICATED_PATH__? pathToIcon = null;
+        public __DEPRICATED_PATH__? PathToIcon {
             get => pathToIcon;
             set { pathToIcon ??= value; }
         }
 
         public Desktop(Folder folder) {
-            path = new Path(folder, "desktop.ini");
+            path = new __DEPRICATED_PATH__(folder, "desktop.ini");
             parent = folder;
         }
         /// <summary>
@@ -38,7 +38,7 @@ public partial class Folder {
         /// <summary>
         /// Set the icon of the parent directory to the Icon at the supplied path.
         /// </summary>
-        /// <param name="icoPath">Path to the icon to be used</param>
+        /// <param name="icoPath">__DEPRICATED_PATH__ to the icon to be used</param>
         /// <returns>True if the operation succeeded, Else false</returns>
         public bool SetIcon(string icoPath) {
             if (icoPath is null) 
