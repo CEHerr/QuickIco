@@ -8,6 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Enums.cs" />
+    <Compile Remove="FolderContext.cs" />
+    <Compile Remove="FolderOptions.cs" />
+    <Compile Remove="SystemLiaison.cs" />
+    <Compile Remove="__DEPRICATED_PATH__.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Magick.NET-Q16-OpenMP-x64" Version="13.5.0" />
     <PackageReference Include="Vanara.PInvoke.Shell32" Version="3.4.17" />
   </ItemGroup>

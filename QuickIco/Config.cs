@@ -1,90 +1,68 @@
 ﻿using PrimitiveExtensions;
-using System.Diagnostics.Contracts;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using Vanara.Extensions.Reflection;
 
 /// <summary>
 /// Provides access to runtime information, arguments, options, and system constants
 /// </summary>
 public static class Config {
+    //!todo change most of these to pull from a .config file
     public const string squareIcoSize = "256x256";
-    public const int maxFolderPathLength = 247;
+    //public const int maxFolderPathLength = 247;
     public const int maxFilePathLength = 259;
     private const string ext = ".ico";
+    private static int maxIconPathLength;
 
-    public static __DEPRICATED_PATH__ LibraryPath { get; private set; }
-    public static __DEPRICATED_PATH__ BackupFolder { get; private set; }
-    public static __DEPRICATED_PATH__ BackupPath { get; private set; }
-    public static __DEPRICATED_PATH__ IcoFolder { get; private set; }
-    public static bool Overwrite { get; private set; }
-    public static bool Crop { get; private set; }
-    public static string SeparatorSubstitute { get; private set; }
-    public static string NonAsciiSubstitute { get; private set; }
+    public static string LibraryPath { get; private set; }
+    //folder path to save icons to
+    public static string IcoFolder { get; private set; }
 
-    private static int[] _date = [
-        DateTime.Now.Year,
-        DateTime.Now.Month,
-        DateTime.Now.Day,
-        DateTime.Now.Hour,
-        DateTime.Now.Minute,
-        DateTime.Now.Second];
-    private static DateTime date = DateTime.Now;
-    public static DateTime Date { get; }
-    
-    public static void Init() {
-        //fetch config info from .config file
+    private static bool overwrite = false;
+    public static bool Overwrite { 
+        get => overwrite; 
+        set => overwrite = value; 
     }
-    /// <summary>
-    /// Initializes public static fields which are used by QuickIco classes to access common runtime information
-    /// </summary>
-    /// <param name="debugMode"></param>
-    /// <param name="_libraryPath">The full path to the media library.
-    /// This should be the common parent of the directories which will actually have their icons set.</param>
-    /// <exception cref="Exception"></exception>
-    public static void Init(bool debugMode, string _libraryPath) {
-        if (debugMode) {
-            LibraryPath = new __DEPRICATED_PATH__(_libraryPath);
-            BackupFolder = new __DEPRICATED_PATH__(@"C:\BACKUP\Software\!mine\icoSys");
-            string preName = 
-                $"{date.Year}-{date.Month}-{date.Day}-{date.Hour}-{date.Minute}-{date.Second}";
-            BackupPath = new __DEPRICATED_PATH__(BackupFolder, $"{preName}.backup");
-            IcoFolder = new __DEPRICATED_PATH__(@"C:\BACKUP\Software\!mine\icoSys\icons");
-            Overwrite = false;
-            Crop = true;
-            SeparatorSubstitute = "$";
-            NonAsciiSubstitute = "_";
-        }
-        else {
-            throw new Exception("Release mode not yet implimented. Please run in Debug Mode");
-        }
+    private static bool crop = false;
+    public static bool Crop {
+        get => crop;
+        set => crop = value; 
+    }
+
+    //character to substiture for seperator chars in source image paths
+    //when saving them as icons
+    private static string separatorSubstitute = "$";
+    public static string SeparatorSubstitute { 
+        get => separatorSubstitute; 
+        set => separatorSubstitute = value; 
+    }
+    //character to substiture for non ascii characters in source image
+    //paths when saving them as icons
+    private static string nonAsciiSubstitute = "_";
+    public static string NonAsciiSubstitute { 
+        get => nonAsciiSubstitute; 
+        set => nonAsciiSubstitute = value; 
+    }
+
+    public static void Init(string libraryPath, string icoFolder) {
+            LibraryPath = libraryPath;
+            IcoFolder = icoFolder;
+            maxIconPathLength = maxFilePathLength - (IcoFolder.Length + 1 + ext.Length);
     }
     public static void Init(string[] args) {
-
+        LibraryPath = args[0];
+        IcoFolder = args[1];
+        maxIconPathLength = maxFilePathLength - (IcoFolder.Length + 1 + ext.Length);
     }
 
-    public static __DEPRICATED_PATH__ ToSaveDest(__DEPRICATED_PATH__ sourceMediaPath) {
-        string parent =
-            Regex.Match(sourceMediaPath, @"^.*(?=\\)")
-            .Value;
+    public static string ToSaveDest(string sourceMediaPath) {
+        string parent = Path.GetDirectoryName(sourceMediaPath);
         string iconRP = 
-            __DEPRICATED_PATH__.GetRelativePath(parent)
+            Path.GetRelativePath(LibraryPath, parent)
             .Replace("\\", SeparatorSubstitute)
             .ReplaceNonAscii(NonAsciiSubstitute);
-        bool pathTooLong = 
-            (iconRP.Length + IcoFolder.path.Length + 1)
-            > (maxFilePathLength - 4);
-        
-        if (pathTooLong) iconRP = Trim(iconRP);
 
-        return System.IO.Path.Combine(IcoFolder, iconRP + ext);
+        if (iconRP.Length > maxIconPathLength) 
+            iconRP = iconRP.Remove(maxIconPathLength);
 
-        string Trim(string str) {
-            return str.Remove(
-                maxFilePathLength - (
-                IcoFolder.path.Length + 1) -
-                ext.Length);
-        }
-        //Note on unique key: two files will not have the same creation time
+        return Path.Combine(IcoFolder, iconRP + ext);
     }
 }

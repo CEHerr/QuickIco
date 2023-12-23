@@ -2,7 +2,7 @@
   "profiles": {
     "QuickIco": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\manga\" \"1\""
+      "commandLineArgs": "\"D:\\manga\" \"C:\\BACKUP\\Software\\!mine\\icoSys\\icons\""
     }
   }
 }

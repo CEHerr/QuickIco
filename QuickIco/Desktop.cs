@@ -11,16 +11,16 @@ public partial class Folder {
         private const FileAttributes hidden = FileAttributes.Hidden;
         private const FileAttributes system = FileAttributes.System;
 
-        public __DEPRICATED_PATH__ path { get; }
+        public string path { get; }
         private Folder parent;
-        private __DEPRICATED_PATH__? pathToIcon = null;
-        public __DEPRICATED_PATH__? PathToIcon {
+        private string? pathToIcon = null;
+        public string? PathToIcon {
             get => pathToIcon;
             set { pathToIcon ??= value; }
         }
 
         public Desktop(Folder folder) {
-            path = new __DEPRICATED_PATH__(folder, "desktop.ini");
+            path = System.IO.Path.Combine(folder, "desktop.ini");
             parent = folder;
         }
         /// <summary>
@@ -28,7 +28,7 @@ public partial class Folder {
         /// </summary>
         public void Print() {
             try {
-                Console.WriteLine(File.ReadAllText(path));
+                Console.WriteLine(ReadAllText(path));
             }
             catch {
                 Console.WriteLine($"failed to read the desktop file at {path}");
@@ -68,12 +68,12 @@ public partial class Folder {
             void WriteToDesktop(Shell32.SHFOLDERCUSTOMSETTINGS settings) {
                 HRESULT res = Shell32.SHGetSetFolderCustomSettings
                     (ref settings
-                    ,parent.path
+                    ,parent.Path
                     ,Shell32.FCS.FCS_FORCEWRITE);
                 Shell32.SHChangeNotify
                     (Shell32.SHCNE.SHCNE_UPDATEDIR
                     ,Shell32.SHCNF.SHCNF_PATHW
-                    ,parent.path
+                    ,parent.Path
                     ,null);
                 Console.WriteLine(res.ToString());
             }
@@ -83,7 +83,8 @@ public partial class Folder {
             void ClearIconCache() {
                 string systemFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.System);
                 Kernel32.Wow64DisableWow64FsRedirection(out _);
-                Process clearIconCache = new Process {
+                Process clearIconCache = new Process
+                {
                     StartInfo = {
                         FileName = System.IO.Path.Combine(systemFolderPath, "ie4uinit.exe"),    //ie4uinit.exe is a program that provides management functions related to the Icon Cache
                         Arguments = "-ClearIconCache",
@@ -93,7 +94,7 @@ public partial class Folder {
                 clearIconCache.Start();
                 clearIconCache.WaitForExit();
                 clearIconCache.Close();
-                Vanara.PInvoke.Kernel32.Wow64EnableWow64FsRedirection(true);
+                Kernel32.Wow64EnableWow64FsRedirection(true);
             }
         }
 
@@ -107,6 +108,6 @@ public partial class Folder {
         public override string ToString() {
             return $"{path}";
         }
-        public static implicit operator string(Desktop d) => d.path.path;
+        public static implicit operator string(Desktop d) => d.path;
     }
 }

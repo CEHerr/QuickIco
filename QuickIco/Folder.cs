@@ -1,34 +1,25 @@
 ﻿using static SysExtension.Collections;
+using System.IO;
 public static class FolderFactory {
-    public static Folder CreateFolder(__DEPRICATED_PATH__ path) {
+    public static Folder CreateFolder(string path) {
         return new Folder(path);
     }
 }
 public partial class Folder { 
-    public __DEPRICATED_PATH__ path { get; }
+    public string Path { get; }
+    public string Name { get => System.IO.Path.GetDirectoryName(this); }
     public Desktop desktop;
     public List<Folder> subFolders = new List<Folder>();
     public bool hasIcon = false;
-    private __DEPRICATED_PATH__? pathToIcon = null;
+    private string? pathToIcon = null;
 
-    public Folder(__DEPRICATED_PATH__ path) {
-        this.path = path;
-        desktop = new Desktop(this);
-    }
     public Folder(string path) {
-        this.path = new __DEPRICATED_PATH__(path);
+        this.Path = path;
         desktop = new Desktop(this);
-    }
-    public Folder(string path, Folder parent) {
-        this.path = new __DEPRICATED_PATH__(path);
-        desktop = new Desktop(this);
-        #if (verbose)
-        Console.WriteLine($"folder created for {path}");
-        #endif
     }
     public void CreateSubFolders(bool recursive) {
         Each(Directory.GetDirectories(this),
-            (sF) => subFolders.Add(new Folder(sF, this)));
+            (sF) => subFolders.Add(new Folder(sF)));
         if (recursive) 
             Each(subFolders, (sF) => sF.CreateSubFolders(true));
     }
@@ -36,7 +27,7 @@ public partial class Folder {
         SysExtension.Tree.PrintTree(
             this, 
             (f) => f.subFolders, 
-            (f) => f.Name());
+            (f) => f.Name);
     }
 
     public void CreateIcon(bool recursive) {
@@ -48,8 +39,8 @@ public partial class Folder {
             Each(subFolders, (sF) => sF.QueueAll(true));
         Queue(GetIconSourceImage());
 
-        void Queue(__DEPRICATED_PATH__? icoSource) {
-            if (icoSource is not null && path != Config.LibraryPath)
+        void Queue(string? icoSource) {
+            if (icoSource is not null && Path != Config.LibraryPath)
                 IconCreator.QueueWork(icoSource, out pathToIcon);
         }
     }
@@ -57,7 +48,7 @@ public partial class Folder {
     public void SetIcons(bool recursive) {
         if (recursive && subFolders.Any())
             Each(subFolders, (f) => f.SetIcons(true));
-        if (path != Config.LibraryPath)
+        if (Path != Config.LibraryPath)
             desktop.SetIcon(GetIconPath());
     }
     public string? GetIconPath() {
@@ -77,14 +68,17 @@ public partial class Folder {
     /// <summary>
     /// Get's the filepath of the image to use to generate the icon for this folder
     /// </summary>
-    /// <returns>If this folder contains media: A __DEPRICATED_PATH__ object for it's Icon Source Image. else: null</returns>
-    public __DEPRICATED_PATH__? GetIconSourceImage() {
-        IEnumerable<__DEPRICATED_PATH__>? mediaFiles = GetMediaFiles();
+    /// <returns>If this folder contains media: A path to it's Icon Source Image. else: null</returns>
+    public string? GetIconSourceImage() {
+        IEnumerable<string>? mediaFiles = GetMediaFiles();
         if (mediaFiles is null) return null;
 
-        IEnumerable<string> namesOnly = mediaFiles.Select((x) => x.ExtlessName);
+        IEnumerable<string> namesOnly = mediaFiles.Select((x) => 
+            System.IO.Path.ChangeExtension(System.IO.Path.GetFileName(x), null));
+
         int index = GetIndex(namesOnly.Select(ToPrecedence));
-        return new __DEPRICATED_PATH__(mediaFiles.ElementAt(index));
+
+        return mediaFiles.ElementAt(index);
 
         int ToPrecedence(string path) => path switch {
             "icon"          => 0,
@@ -108,34 +102,25 @@ public partial class Folder {
         }
     }
     /// <summary>
-    /// Change this to return IEnumerable of type __DEPRICATED_PATH__
+    /// 
     /// </summary>
     /// <returns>Fully qualified file paths of all media files in this folder</returns>
-    private IEnumerable<__DEPRICATED_PATH__>? GetMediaFiles(){
-        string[]? files = Directory.GetFiles(path);
-        var mediaFiles = from f in files
-                          where IsMedia(f)
-                          select new __DEPRICATED_PATH__(f);
+    private IEnumerable<string>? GetMediaFiles(){
+        var mediaFiles = Directory.GetFiles(Path).Where(IsMedia);
         
         return mediaFiles.Any() ? mediaFiles : null;
 
-        bool IsMedia(string path) {
-            FileInfo inf = new FileInfo(path);
-            return CheckExtension(inf.Extension);
-
-            bool CheckExtension(string ext) => ext switch {
-                ".jpg" => true,
-                ".jpeg"=> true,
-                ".png" => true,
-                _ => false,
-            };
-        }
+        bool IsMedia(string path) => System.IO.Path.GetExtension(path) switch {
+            ".jpg" => true,
+            ".jpeg" => true,
+            ".png" => true,
+            _ => false,
+        };
     }
 
 
-    public string Name() { return path.name; }
-    public override string ToString() { return path.path; }
-    public static implicit operator string(Folder f) => f.path.path;
+    public override string ToString() { return Path; }
+    public static implicit operator string(Folder f) => f.Path;
 
 #if experimentalFeatures
     public void Backup(bool recursive) {
