@@ -75,7 +75,7 @@ public partial class Folder {
                     ,Shell32.SHCNF.SHCNF_PATHW
                     ,parent.Path
                     ,null);
-                Console.WriteLine(res.ToString());
+                //Console.WriteLine(res.ToString());
             }
             /// <summary>
             /// Clears the Icon Cache used by Windows Explorer in order to prevent old icons from continuing to be displayed
@@ -96,14 +96,6 @@ public partial class Folder {
                 clearIconCache.Close();
                 Kernel32.Wow64EnableWow64FsRedirection(true);
             }
-        }
-
-        //returns true if the IconResource file path actually contains a file
-        public bool CheckForMatch() {
-            return true;
-        }
-        private bool Exists(){
-            return File.Exists(this);
         }
         public override string ToString() {
             return $"{path}";

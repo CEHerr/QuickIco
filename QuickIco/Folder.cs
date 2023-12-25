@@ -1,11 +1,10 @@
 ﻿using static SysExtension.Collections;
-using System.IO;
 public static class FolderFactory {
     public static Folder CreateFolder(string path) {
         return new Folder(path);
     }
 }
-public partial class Folder { 
+public partial class Folder {
     public string Path { get; }
     public string Name { get => System.IO.Path.GetDirectoryName(this); }
     public Desktop desktop;
@@ -20,13 +19,13 @@ public partial class Folder {
     public void CreateSubFolders(bool recursive) {
         Each(Directory.GetDirectories(this),
             (sF) => subFolders.Add(new Folder(sF)));
-        if (recursive) 
+        if (recursive)
             Each(subFolders, (sF) => sF.CreateSubFolders(true));
     }
     public void PrintSubFolders() {
         SysExtension.Tree.PrintTree(
-            this, 
-            (f) => f.subFolders, 
+            this,
+            (f) => f.subFolders,
             (f) => f.Name);
     }
 
@@ -35,7 +34,7 @@ public partial class Folder {
         IconCreator.ProcessQueue();
     }
     public void QueueAll(bool recursive) {
-        if (recursive && subFolders.Any()) 
+        if (recursive && subFolders.Any())
             Each(subFolders, (sF) => sF.QueueAll(true));
         Queue(GetIconSourceImage());
 
@@ -52,7 +51,7 @@ public partial class Folder {
             desktop.SetIcon(GetIconPath());
     }
     public string? GetIconPath() {
-        if (pathToIcon is not null)  
+        if (pathToIcon is not null)
             return pathToIcon;
         return AttemptInheritence();
 
@@ -73,7 +72,7 @@ public partial class Folder {
         IEnumerable<string>? mediaFiles = GetMediaFiles();
         if (mediaFiles is null) return null;
 
-        IEnumerable<string> namesOnly = mediaFiles.Select((x) => 
+        IEnumerable<string> namesOnly = mediaFiles.Select((x) =>
             System.IO.Path.ChangeExtension(System.IO.Path.GetFileName(x), null));
 
         int index = GetIndex(namesOnly.Select(ToPrecedence));
@@ -81,15 +80,15 @@ public partial class Folder {
         return mediaFiles.ElementAt(index);
 
         int ToPrecedence(string path) => path switch {
-            "icon"          => 0,
-            "ico"           => 1,
-            "cover"         => 2,
-            "cover art"     => 3,
-            "album cover"   => 4,
-            "book cover"    => 5,
-            "folder"        => 6,
+            "icon" => 0,
+            "ico" => 1,
+            "cover" => 2,
+            "cover art" => 3,
+            "album cover" => 4,
+            "book cover" => 5,
+            "folder" => 6,
 
-            _               => 999,
+            _ => 999,
         };
         int GetIndex(IEnumerable<int> pMask) {
             if (pMask.Count() < 2) { return 0; }
@@ -105,24 +104,17 @@ public partial class Folder {
     /// 
     /// </summary>
     /// <returns>Fully qualified file paths of all media files in this folder</returns>
-    private IEnumerable<string>? GetMediaFiles(){
-        var mediaFiles = Directory.GetFiles(Path).Where(IsMedia);
-        
-        return mediaFiles.Any() ? mediaFiles : null;
+    private IEnumerable<string>? GetMediaFiles() {
+        var mediaFiles = Directory.GetFiles(Path).Where(IOext.Path.IsMedia);
 
-        bool IsMedia(string path) => System.IO.Path.GetExtension(path) switch {
-            ".jpg" => true,
-            ".jpeg" => true,
-            ".png" => true,
-            _ => false,
-        };
+        return mediaFiles.Any() ? mediaFiles : null;
     }
 
 
     public override string ToString() { return Path; }
     public static implicit operator string(Folder f) => f.Path;
 
-#if experimentalFeatures
+#if (experimentalFeatures)
     public void Backup(bool recursive) {
         //###this throws if the backup folder doesn't exist
         try {
@@ -139,37 +131,6 @@ public partial class Folder {
         catch {
             Console.WriteLine("backup failed");
         }
-    }
-#endif
-#if depricatedMethods
-    private Path? GetIconSourceImage() {
-        IEnumerable<string>? mediaFiles = GetMediaFiles();
-        if (mediaFiles is not null) {
-            //move this into a function that checks for a valid icon in the icon folder directly
-            hasIcon = true;
-            return new Path(mediaFiles.ElementAt(0));
-        }
-        else { return null; }
-
-        return mediaFiles is not null ? new Path(mediaFiles.ElementAt(0)) : null;
-    }
-    public void _PrintSubFolders(bool recursive) {
-        if (subFolders.Any()) {
-            Console.WriteLine(Name() + ":");
-            //Each(subFolders, (sF)=> sF.PrintSubFolders(recursive));
-            foreach (Folder subFolder in subFolders) {
-                Console.WriteLine("\t" + subFolder.Name());
-                if (recursive) { subFolder.PrintSubFolders(true); }
-            }
-        }
-
-    }
-    private string _GetIconPath() {
-        string emptyCase = "";
-        if (path == Config.LibraryPath) { return emptyCase; }                   //we are in the library root
-        else if (hasIcon)               { return path.ToIco(); }                //the folder contains media
-        else if (subFolders.Any())      { return subFolders[0].GetIconPath(); } //the folder has no media, but does have children
-        else                            { return emptyCase; }                   //folder has no media or children
     }
 #endif
 }

@@ -7,6 +7,8 @@
         }
     }
 }
+
+
 namespace CollectionExtensions {
     public static class IEnumerableExt {
         public static void Each<T>(this IEnumerable<T> collection, Action<T> action) {
@@ -15,5 +17,33 @@ namespace CollectionExtensions {
         public static string AsString(this IEnumerable<char> e) {
             return string.Concat(e);
         }
+    }
+}
+
+
+namespace IOext {
+    public enum FileType {
+        Image,
+        Audio,
+        Video,
+
+        Unrecognized,
+    }
+    public static partial class Path {
+        public static FileType ToFileType(string path) => 
+            System.IO.Path.GetExtension(path) switch {
+            ".jpg" => FileType.Image,
+            ".jpeg"=> FileType.Image,
+            ".png" => FileType.Image,
+
+            _      => FileType.Unrecognized,
+        };
+        public static bool IsMedia(string path) => ToFileType(path) switch {
+            FileType.Image => true,
+            FileType.Audio => true,
+            FileType.Video => true,
+
+            _ => false,
+        };
     }
 }
