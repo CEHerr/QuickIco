@@ -1,5 +1,11 @@
 ﻿namespace PrimitiveExtensions {
     public static class StringExt {
+        /// <summary>
+        /// Replace all Non-Ascii characters in this string with another character
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="replacement">The replacement character</param>
+        /// <returns></returns>
         public static string ReplaceNonAscii(this string str, string replacement) {
             const string nonAsciiRegexPattern = @"[^\x00-\x7F]";
             return System.Text.RegularExpressions.
@@ -11,6 +17,7 @@
 
 namespace CollectionExtensions {
     public static class IEnumerableExt {
+        /// <summary>Shorthand for a simple foreach loop</summary>
         public static void Each<T>(this IEnumerable<T> collection, Action<T> action) {
             foreach (var item in collection) action(item);
         }

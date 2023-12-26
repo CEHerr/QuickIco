@@ -1,31 +1,21 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Text;
 using static System.IO.File;
 using Vanara.PInvoke;
 public partial class Folder {
     /// <summary>
-    /// Provied methods to access and modify Desktop.ini files which are used by Windows to store custom display options for their parent directory.
+    /// Provied methods to access and modify desktop.ini files which are used by Windows to store custom display options for their parent directory.
     /// </summary>
     public class Desktop {
-        private const FileAttributes hidden = FileAttributes.Hidden;
-        private const FileAttributes system = FileAttributes.System;
-
+        /// <summary>Full path to this desktop.ini</summary>
         public string path { get; }
+        /// <summary>Folder object for this desktop.ini's parent folder</summary>
         private Folder parent;
-        private string? pathToIcon = null;
-        public string? PathToIcon {
-            get => pathToIcon;
-            set { pathToIcon ??= value; }
-        }
 
         public Desktop(Folder folder) {
             path = System.IO.Path.Combine(folder, "desktop.ini");
             parent = folder;
         }
-        /// <summary>
-        /// Output entire desktop.ini file to the console
-        /// </summary>
+        /// <summary>Output entire desktop.ini file to the console</summary>
         public void Print() {
             try {
                 Console.WriteLine(ReadAllText(path));
@@ -36,19 +26,16 @@ public partial class Folder {
         }
 
         /// <summary>
-        /// Set the icon of the parent directory to the Icon at the supplied path.
+        /// Set the icon of the parent directory to the .ico file at the supplied path.
         /// </summary>
-        /// <param name="icoPath">__DEPRICATED_PATH__ to the icon to be used</param>
+        /// <param name="icoPath">Full file path to the .ico file to be used</param>
         /// <returns>True if the operation succeeded, Else false</returns>
         public bool SetIcon(string icoPath) {
             if (icoPath is null) 
                 return false;
 
-            //this assert will fail if an invalid image makes it into the work queue
-            //Debug.Assert(File.Exists(icoPath));
-
-            var foldSet = CreateFolderSettings();
-            WriteToDesktop(foldSet);
+            var folderSettings = CreateFolderSettings();
+            WriteToDesktop(folderSettings);
             ClearIconCache();
             return true;
 
@@ -59,14 +46,14 @@ public partial class Folder {
                 return new Shell32.SHFOLDERCUSTOMSETTINGS {
                     dwMask = Shell32.FOLDERCUSTOMSETTINGSMASK.FCSM_ICONFILE,
                     pszIconFile = icoPath,
-                    dwSize = (uint)Marshal.SizeOf(typeof(Shell32.SHFOLDERCUSTOMSETTINGS)),
+                    dwSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(Shell32.SHFOLDERCUSTOMSETTINGS)),
                 };
             }
             /// <summary>
             /// Applies the folder settings object to this desktop.ini file and notifies the system of the change
             /// </summary>
             void WriteToDesktop(Shell32.SHFOLDERCUSTOMSETTINGS settings) {
-                HRESULT res = Shell32.SHGetSetFolderCustomSettings
+                Shell32.SHGetSetFolderCustomSettings
                     (ref settings
                     ,parent.Path
                     ,Shell32.FCS.FCS_FORCEWRITE);
@@ -75,7 +62,6 @@ public partial class Folder {
                     ,Shell32.SHCNF.SHCNF_PATHW
                     ,parent.Path
                     ,null);
-                //Console.WriteLine(res.ToString());
             }
             /// <summary>
             /// Clears the Icon Cache used by Windows Explorer in order to prevent old icons from continuing to be displayed

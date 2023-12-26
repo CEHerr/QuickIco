@@ -1,9 +1,10 @@
-﻿using ImageMagick;
+﻿#define PRINT_ON_ICON_CREATION
+using ImageMagick;
 public static class IconCreator {
     /// <summary>
-    /// Adds an image to the work queue of the approprate Icon Creator. Process these queues by calling ProcessQueue()
+    /// Adds an image to the work queue of the approprate Icon Creator. Process these queues by calling IconCreator.ProcessQueue()
     /// </summary>
-    /// <param name="path">The path to the media file to be used to generate the icon</param>
+    /// <param name="path">The full path to the media file to be used to generate the icon</param>
     /// <param name="saveDestination">The path which will be saved to by the icon creator when the media is processed or null if the file failed to be queued</param>
     /// <returns>True if the media has been successfuly added to a work queue, else false.</returns>
     public static bool QueueWork(string path, out string saveDestination) {
@@ -17,6 +18,7 @@ public static class IconCreator {
                 return false;
         }
     }
+    /// <summary>Attempt to process all files in all IconCreator queues. These's queues are populated by the IconCreator.QueueWork(string path, out string saveDestination) method</summary>
     public static void ProcessQueue() {
         ImageIconCreator.ProcessQueue();
     }
@@ -37,7 +39,7 @@ public static class IconCreator {
                 try { 
                     img.Read(imagePath); }
                 catch { 
-                    Console.WriteLine($"ImageMagick failed to read the image at {imagePath}");
+                    Console.WriteLine($"ImageMagick failed to read the image at {imagePath}\ncontinuing...");
                     continue;
                 }
 
@@ -46,24 +48,24 @@ public static class IconCreator {
                     try { 
                         img.Crop(sqSize, sqSize); }
                     catch { 
-                        Console.WriteLine($"ImageMagick failed to crop the image at {imagePath}");
+                        Console.WriteLine($"ImageMagick failed to crop the image at {imagePath}\ncontinuing...");
                         continue;
                     }
                 }
                 try { 
-                    img.Resize(new MagickGeometry(Config.squareIcoSize)); }
+                    img.Resize(new MagickGeometry(Config.squareIconSize)); }
                 catch {
-                    Console.WriteLine($"ImageMagick failed to resize the image at {imagePath}");
+                    Console.WriteLine($"ImageMagick failed to resize the image at {imagePath}\ncontinuing...");
                     continue;
                 }
 
                 try { 
                     img.Write(dest); }
                 catch {
-                    Console.WriteLine($"ImageMagick failed to save the processed image from {imagePath}\nto the save destination {dest}");
+                    Console.WriteLine($"ImageMagick failed to save the processed image from {imagePath}\nto the save destination {dest}\ncontinuing...");
                     continue;
                 }
-#if verbose
+#if PRINT_ON_ICON_CREATION
                 Console.WriteLine($"Icon created for {imagePath}");
 #endif
             }

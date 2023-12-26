@@ -1,18 +1,11 @@
-﻿using System.Runtime.CompilerServices;
-using static SysExtension.Collections;
-using static CollectionExtensions.IEnumerableExt;
-
-namespace SysExtension {
+﻿namespace SysExtension {
     /// <summary>
     /// Provides methods for operating on collections
     /// </summary>
     public static class Collections {
         /// <summary>
-        /// Works like linq Select() but with actions
+        /// Shorthand for simple foreach loops
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="collection"></param>
-        /// <param name="action"></param>
         public static void Each<T>(IEnumerable<T> collection, Action<T> action) {
             foreach (var item in collection) action(item);
         }
@@ -49,8 +42,11 @@ namespace SysExtension {
         public static void PrintTree<T>(T node, Func<T, IEnumerable<T>> childNodes,Func<T,string> nodeName, int depth = 0) {
             Console.Write(StringMaker.Repeat('\t', depth) + nodeName(node));
             IEnumerable<T> children = childNodes(node);
-            if (children.Any())
-                children.Each((a) => PrintTree(a, childNodes, nodeName, depth + 1));
+            if (children.Any()) {
+                foreach (var child in children) {
+                    PrintTree(child, childNodes, nodeName, depth + 1);
+                }
+            }
         }
     }
     /// <summary>
